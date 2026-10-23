@@ -43,7 +43,6 @@ class POST_data_canvas(Canvas_connector):
         self.domain: str = f"https://{domain}/api/v1"
         self.header: dict = {"Authorization": f"Bearer {self.Auth_token}"}
         self.params: dict = {}
-        self.upload_params: dict = {}
 
         self.Session.headers.update()
 
@@ -103,7 +102,10 @@ class POST_data_canvas(Canvas_connector):
     def upload_user_data(self, user: client) -> bool:
         """Upload image to users files"""
         # Variables
-        self.upload_params = {}
+        # Kept on the user, not the connector: users are processed on several
+        # threads through one connector, and a shared value was cleared by the
+        # next user's upload before this user's avatar was set.
+        user.upload_params = {}
         url: str = self.domain + "/users/self/files"
         inform_parameters = {
             "name": user.image.image_name,
@@ -132,7 +134,7 @@ class POST_data_canvas(Canvas_connector):
         # These must be identical to the params received from canvas.
         # Else this will fail
         try:
-            self.upload_params = json_res["upload_params"]
+            user.upload_params = json_res["upload_params"]
         except KeyError as e:
             self.log.error(
                 "Upload Parameters could not be set: %s. The following response was returned %s".format(e, response.text)
@@ -141,7 +143,7 @@ class POST_data_canvas(Canvas_connector):
         # Send the file to canvas
         # Get upload confirmation
         upload_file_response = requests.post(
-            json_res["upload_url"], data=self.upload_params, files=files, allow_redirects=False
+            json_res["upload_url"], data=user.upload_params, files=files, allow_redirects=False
         )
 
         status_code: int = upload_file_response.status_code
@@ -175,8 +177,8 @@ class POST_data_canvas(Canvas_connector):
         """Sets an image to be a user's PFP"""
 
         # Ensure the upload parameters are correctly set
-        if not self.upload_params:
-            self.log.error("Upload params is empty, cannot set image avatar.")
+        if not user.upload_params:
+            self.log.error(f"Upload params is empty for {user.client_id}, cannot set image avatar.")
             return False
 
         # Log that Canvas avatar is being updated

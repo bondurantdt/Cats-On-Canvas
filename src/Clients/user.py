@@ -22,3 +22,5 @@ class client():
 
         self.client_id: str = str(client_id)
         self.image: image = client_image
+        # Set by the Canvas connector when this user's image is uploaded
+        self.upload_params: dict = {}

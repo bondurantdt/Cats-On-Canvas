@@ -163,11 +163,13 @@ class Main:
             connector.get_canvas_id(user)
 
             # Step 1: Start upload file to user's file storage
-            connector.upload_user_data(user)
             # if no upload happened log and next student
+            if not connector.upload_user_data(user):
+                raise RuntimeError("image upload to the user's files failed")
 
             # Step 2: Make API call to set avatar image
-            connector.set_image_as_avatar(user)
+            if not connector.set_image_as_avatar(user):
+                raise RuntimeError("avatar was not set")
         except Exception as e:
             self.log.error(
                 "Could not process user: %s - %s",
@@ -283,7 +285,7 @@ class Main:
         ########################################
         # For each user Start upload process
         ########################################
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=2) as executor:
             
             # For each student in user list upload data to canvas
             # Make sure enumerate starts at 1
