@@ -141,3 +141,13 @@ Images/1042800.jpeg
 
 # Untrack Settings file
 Settings/settings.yaml
+
+# Run data: rosters list student IDs and Images holds student photos.
+# photoBackfill_Students.ps1 stages both here and keeps a dated roster backup.
+CSV_data/*.csv
+CSV_data/*.csv.bak-*
+Images/
+log.txt
+
+# macOS
+.DS_Store
